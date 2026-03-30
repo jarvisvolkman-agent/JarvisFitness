@@ -1,8 +1,11 @@
+.git
+.gitignore
 .DS_Store
-.env
 node_modules
 dist
 data
+src
+public
 backend/bin
 backend/obj
 frontend/node_modules

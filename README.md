@@ -1,171 +1,125 @@
-# JarvisFitness
+# JarvisFitness v2
 
-Local-first fitness tracking MVP — Express API + SQLite + simple built-in web UI.
+Local-first fitness records management rewritten to match the JarvisCars architecture.
 
-## What this MVP is
+## Stack
 
-JarvisFitness is an internal-use foundation for a future fitness / nutrition subagent.
-This version focuses on structured data capture and local workflows, not AI planning logic.
+- **Backend:** .NET 10 Web API with Entity Framework Core + PostgreSQL
+- **Frontend:** React 19 + Vite + TypeScript + React Router
+- **Database:** PostgreSQL 16
+- **Deployment:** Docker Compose
+- **Agent helper:** `tools/jarvisfitness-cli.sh`
 
-Included in the MVP:
-- profile / onboarding data for training + nutrition context
-- goals with status tracking
+## What Was Mirrored From JarvisCars
+
+- split repo structure with `backend/`, `frontend/`, `tools/`, `docker-compose.yml`
+- .NET 10 API using DTOs, controllers, EF Core data layer, and startup DB provisioning
+- React frontend that talks to `/api`
+- local Docker Compose stack with separate database, backend, and frontend services
+- agent-facing shell helper that wraps the REST API
+- README layout centered on local-first workflows
+
+## Fitness Domain Preserved
+
+- profile
+- goals
 - preferences and constraints
-- weekly-style check-ins
-- dashboard summary API
-- simple browser UI
-- SQLite persistence
-- Docker-first local run path
-- minimal agent-facing CLI wrapper
-
-## Architecture
-
-- **Backend:** Node.js + TypeScript + Express
-- **Persistence:** SQLite via `better-sqlite3`
-- **Frontend:** static HTML/CSS/JS served by the backend
-- **Runtime:** single local container via Docker Compose
-
-Everything is local-first. No external APIs or cloud dependencies are required.
+- check-ins
+- dashboard summary
+- export
+- search across stored fitness records
 
 ## Quick Start
-
-### Docker (recommended)
 
 ```bash
 docker compose up --build -d
 ```
 
-Then open:
-- App + UI: <http://localhost:4000>
-- API health: <http://localhost:4000/api/health>
+Open:
 
-Stop it with:
+- Frontend: http://localhost:5183
+- API: http://localhost:5110/api
+- OpenAPI: http://localhost:5110/openapi/v1.json
+
+Stop:
 
 ```bash
 docker compose down
 ```
 
-### Local Node run
-
-Requires Node 22+.
+Reset database volume:
 
 ```bash
-npm install
-npm run build
-npm start
+docker compose down -v
 ```
 
-For development with autoreload:
+## API Endpoints
 
-```bash
-npm run dev
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/health` | Health check |
+| GET | `/api/profile` | Get profile |
+| PUT | `/api/profile` | Upsert profile |
+| GET/POST | `/api/goals` | List or create goals |
+| PUT/DELETE | `/api/goals/:id` | Update or delete goal |
+| GET/POST | `/api/preferences` | List or create preference/constraint |
+| PUT/DELETE | `/api/preferences/:id` | Update or delete preference item |
+| GET/POST | `/api/check-ins` | List or create check-ins |
+| PUT/DELETE | `/api/check-ins/:id` | Update or delete check-in |
+| GET | `/api/dashboard/summary` | Dashboard summary |
+| GET | `/api/export` | Export all stored data |
+| GET | `/api/search?q=...` | Search stored fitness content |
 
-## Storage
-
-The SQLite database lives in:
-- local dev: `./data/jarvisfitness.db`
-- Docker: persisted in the `app-data` named volume
-
-You can override storage location with `DATA_DIR`.
-
-## API Overview
-
-All endpoints return JSON under `/api`.
-
-- `GET /api/health` — health check
-- `GET /api/profile` — load current profile
-- `PUT /api/profile` — create/update the default profile
-- `GET /api/goals` — list goals
-- `POST /api/goals` — create goal
-- `PUT /api/goals/:id` — update goal
-- `DELETE /api/goals/:id` — delete goal
-- `GET /api/preferences?kind=preference|constraint` — list preference items
-- `POST /api/preferences` — create preference/constraint
-- `PUT /api/preferences/:id` — update preference/constraint
-- `DELETE /api/preferences/:id` — delete preference/constraint
-- `GET /api/check-ins` — list check-ins
-- `POST /api/check-ins` — create check-in
-- `PUT /api/check-ins/:id` — update check-in
-- `DELETE /api/check-ins/:id` — delete check-in
-- `GET /api/dashboard/summary` — compact dashboard summary for UI/agents
-- `GET /api/export` — export all stored MVP data
-
-## Minimal Agent / CLI Helper
-
-Two equivalent ways to use the helper:
-
-```bash
-npm run cli -- dashboard
-npm run cli -- profile
-npm run cli -- export
-```
-
-Or via the shell wrapper:
+## Agent Helper
 
 ```bash
 ./tools/jarvisfitness-cli.sh dashboard
+./tools/jarvisfitness-cli.sh profile
 ./tools/jarvisfitness-cli.sh goals
-./tools/jarvisfitness-cli.sh checkins
-./tools/jarvisfitness-cli.sh goals:create '{"category":"weight","title":"Lose 3 kg","status":"active"}'
-./tools/jarvisfitness-cli.sh checkins:create '{"checkInDate":"2026-03-30","weightKg":71,"energy":8,"adherence":9}'
+./tools/jarvisfitness-cli.sh create-goal '{"category":"Weight","title":"Lose 3 kg","targetValue":69,"unit":"kg","timeframe":"12 weeks","status":"Active"}'
+./tools/jarvisfitness-cli.sh create-check-in '{"checkInDate":"2026-03-30","weightKg":71.2,"energy":8,"adherence":9}'
+./tools/jarvisfitness-cli.sh search "shoulder"
 ```
 
-Override the target server with `JARVISFITNESS_API_URL` or `API_URL`.
+Override `JARVISFITNESS_API_URL` to point the helper at a different API base.
 
-## Seed Data
+## Development
 
-On first run the app seeds demo data so the UI and API are immediately usable:
-- 1 demo profile
-- 2 active goals
-- 1 preference
-- 1 constraint
-- 1 check-in
+Backend build in Docker:
 
-To reset local data, delete `data/jarvisfitness.db`.
+```bash
+docker run --rm -v "$(pwd)/backend:/app" -w /app mcr.microsoft.com/dotnet/sdk:10.0 dotnet build
+```
 
-## Validation and Scope
+Frontend dev server:
 
-This MVP includes:
-- typed domain model
-- request validation with Zod
-- basic 400/404/500 handling
-- simple summary metrics for quick review
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-This MVP intentionally does **not** yet include:
-- training plan generation
-- nutrition plan generation
-- auth / multi-user support
-- file uploads
-- advanced analytics or trend charts
-- evidence-based recommendation engine
+The Vite dev server proxies `/api` to `http://localhost:5110`.
 
 ## Verification
 
-Local verification used for this MVP:
+Commands used for this rewrite:
 
 ```bash
-npm install
-npm run build
-npm test
-```
-
-Docker verification:
-
-```bash
+cd frontend && npm install && npm run build
+docker run --rm -v "$(pwd)/backend:/app" -w /app mcr.microsoft.com/dotnet/sdk:10.0 dotnet build
 docker compose up --build -d
-curl http://localhost:4000/api/health
+curl http://localhost:5110/api/health
+curl http://localhost:5110/api/dashboard/summary
+./tools/jarvisfitness-cli.sh export
 ```
 
 ## Repository Layout
 
 ```text
-public/                  simple dashboard UI
-src/server.ts            Express API + static app serving
-src/db.ts                SQLite schema and data access
-src/validation.ts        request validation rules
-src/cli.ts               agent-facing CLI client
-tools/jarvisfitness-cli.sh  shell wrapper for agents/scripts
-Dockerfile
+backend/                       .NET 10 API, models, DTOs, controllers, EF Core data layer
+frontend/                      React app
+tools/jarvisfitness-cli.sh     agent-facing helper
 docker-compose.yml
+README.md
 ```
