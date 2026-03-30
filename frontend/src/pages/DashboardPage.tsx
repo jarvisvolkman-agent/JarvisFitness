@@ -51,7 +51,7 @@ export default function DashboardPage() {
     <div className="page-stack">
       <section className="hero-panel">
         <div>
-          <div className="eyebrow">Dashboard</div>
+          <div className="eyebrow">Přehled</div>
           <h1>Jedno místo pro progres, plán tréninku i evidenci odcvičené práce.</h1>
           <p>
             Hlavní stránka teď funguje jako pracovní přehled. Detailní správa profilu, cílů, tréninkových plánů,
@@ -84,7 +84,7 @@ export default function DashboardPage() {
         <MetricCard label="Poslední hmotnost" value={formatCheckInWeight(summary?.metrics.latestWeightKg ?? null)} accent="neutral" />
       </section>
 
-      {loading ? <div className="loading">Načítám dashboard...</div> : null}
+      {loading ? <div className="loading">Načítám přehled...</div> : null}
       {error ? <div className="error">{error}</div> : null}
 
       {!loading && !error ? (

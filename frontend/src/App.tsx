@@ -9,7 +9,7 @@ import TrainingPlansPage from './pages/TrainingPlansPage'
 import WorkoutsPage from './pages/WorkoutsPage'
 
 const mainNav = [
-  { to: '/', label: 'Dashboard', end: true },
+  { to: '/', label: 'Přehled', end: true },
   { to: '/profil', label: 'Profil' },
   { to: '/cile', label: 'Cíle' },
   { to: '/treninkove-plany', label: 'Plány' },
@@ -39,7 +39,7 @@ export default function App() {
           <NavLink to="/" className="brand-mark">
             JarvisFitness
           </NavLink>
-          <span className="brand-meta">Dashboard pro profil, cíle, tréninkové plány, tréninky a kontroly</span>
+          <span className="brand-meta">Přehled pro profil, cíle, tréninkové plány, tréninky a kontroly</span>
         </div>
 
         <div className="nav-links">
