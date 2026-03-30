@@ -1,7 +1,11 @@
 import { FormEvent, useState } from 'react'
-import { Link, Route, Routes, useNavigate } from 'react-router-dom'
+import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
 import SearchPage from './pages/SearchPage'
+
+function navClassName({ isActive }: { isActive: boolean }) {
+  return isActive ? 'nav-link active' : 'nav-link'
+}
 
 export default function App() {
   const [query, setQuery] = useState('')
@@ -17,22 +21,35 @@ export default function App() {
   return (
     <>
       <nav className="navbar">
-        <Link to="/"><h1>JarvisFitness</h1></Link>
-        <div className="nav-links">
-          <Link to="/">Dashboard</Link>
-          <Link to="/search">Search</Link>
+        <div className="brand-stack">
+          <NavLink to="/" className="brand-mark">
+            JarvisFitness
+          </NavLink>
+          <span className="brand-meta">Lokální fitness workspace</span>
         </div>
-        <form className="search-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            placeholder="Search goals, notes, constraints..."
-          />
-        </form>
+
+        <div className="nav-links">
+          <NavLink to="/" end className={navClassName}>
+            Přehled
+          </NavLink>
+          <NavLink to="/search" className={navClassName}>
+            Hledání
+          </NavLink>
+        </div>
+
+        <div className="search-box">
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Hledat cíle, poznámky..."
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+            />
+          </form>
+        </div>
       </nav>
 
-      <main className="app-shell">
+      <main className="app fitness-app">
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/search" element={<SearchPage />} />

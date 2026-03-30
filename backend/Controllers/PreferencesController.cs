@@ -50,7 +50,7 @@ public class PreferencesController(AppDbContext db) : ControllerBase
     public async Task<ActionResult<object>> Update(int id, [FromBody] PreferenceItemUpdateDto dto)
     {
         var item = await db.PreferenceItems.FindAsync(id);
-        if (item is null) return NotFound(new { error = "Preference item not found." });
+        if (item is null) return NotFound(new { error = "Položka nebyla nalezena." });
 
         if (dto.Kind.HasValue) item.Kind = dto.Kind.Value;
         if (dto.Category.HasValue) item.Category = dto.Category.Value;
@@ -67,7 +67,7 @@ public class PreferencesController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var item = await db.PreferenceItems.FindAsync(id);
-        if (item is null) return NotFound(new { error = "Preference item not found." });
+        if (item is null) return NotFound(new { error = "Položka nebyla nalezena." });
 
         db.PreferenceItems.Remove(item);
         await db.SaveChangesAsync();

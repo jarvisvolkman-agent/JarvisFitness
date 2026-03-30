@@ -28,7 +28,7 @@ public class CheckInsController(AppDbContext db) : ControllerBase
         var existing = await db.CheckIns.FirstOrDefaultAsync(x => x.CheckInDate == dto.CheckInDate);
         if (existing is not null)
         {
-            return Conflict(new { error = "A check-in already exists for that date." });
+            return Conflict(new { error = "Pro toto datum už existuje kontrola." });
         }
 
         var checkIn = new CheckIn
@@ -52,14 +52,14 @@ public class CheckInsController(AppDbContext db) : ControllerBase
     public async Task<ActionResult<object>> Update(int id, [FromBody] CheckInUpdateDto dto)
     {
         var checkIn = await db.CheckIns.FindAsync(id);
-        if (checkIn is null) return NotFound(new { error = "Check-in not found." });
+        if (checkIn is null) return NotFound(new { error = "Kontrola nebyla nalezena." });
 
         if (dto.CheckInDate.HasValue && dto.CheckInDate.Value != checkIn.CheckInDate)
         {
             var existing = await db.CheckIns.FirstOrDefaultAsync(x => x.CheckInDate == dto.CheckInDate.Value && x.Id != id);
             if (existing is not null)
             {
-                return Conflict(new { error = "A check-in already exists for that date." });
+                return Conflict(new { error = "Pro toto datum už existuje kontrola." });
             }
             checkIn.CheckInDate = dto.CheckInDate.Value;
         }
@@ -80,7 +80,7 @@ public class CheckInsController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var checkIn = await db.CheckIns.FindAsync(id);
-        if (checkIn is null) return NotFound(new { error = "Check-in not found." });
+        if (checkIn is null) return NotFound(new { error = "Kontrola nebyla nalezena." });
 
         db.CheckIns.Remove(checkIn);
         await db.SaveChangesAsync();

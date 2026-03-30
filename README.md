@@ -1,125 +1,137 @@
 # JarvisFitness v2
 
-Local-first fitness records management rewritten to match the JarvisCars architecture.
+Lokální fitness workspace postavený na Reactu, .NET 10, PostgreSQL a Docker Compose.
 
 ## Stack
 
-- **Backend:** .NET 10 Web API with Entity Framework Core + PostgreSQL
-- **Frontend:** React 19 + Vite + TypeScript + React Router
-- **Database:** PostgreSQL 16
-- **Deployment:** Docker Compose
+- **Backend:** .NET 10 Web API + Entity Framework Core + PostgreSQL
+- **Frontend:** React 19 + Vite + TypeScript + lokální CSS design system inspirovaný JarvisCars
+- **Databáze:** PostgreSQL 16
+- **Nasazení:** Docker Compose
 - **Agent helper:** `tools/jarvisfitness-cli.sh`
 
-## What Was Mirrored From JarvisCars
+## Co je v této iteraci nové
 
-- split repo structure with `backend/`, `frontend/`, `tools/`, `docker-compose.yml`
-- .NET 10 API using DTOs, controllers, EF Core data layer, and startup DB provisioning
-- React frontend that talks to `/api`
-- local Docker Compose stack with separate database, backend, and frontend services
-- agent-facing shell helper that wraps the REST API
-- README layout centered on local-first workflows
+- celé viditelné UI je přeložené do češtiny
+- české jsou i lookup hodnoty a texty zobrazené ve frontendu
+- seed data a backendové chybové hlášky pro uživatele jsou v češtině
+- frontend je vizuálně přestavěný do stejné produktové rodiny jako JarvisCars
+- styling už není závislý na Tailwind Play CDN a běží plně z lokálních assetů
+- README odpovídá aktuálním portům a architektuře
 
-## Fitness Domain Preserved
+## Architektura
 
-- profile
-- goals
-- preferences and constraints
-- check-ins
-- dashboard summary
-- export
-- search across stored fitness records
+- `backend/` obsahuje .NET 10 API, DTOs, controllery a EF Core datovou vrstvu
+- `frontend/` obsahuje React aplikaci s Vite buildem
+- `docker-compose.yml` spouští PostgreSQL, backend a frontend
+- `tools/jarvisfitness-cli.sh` obaluje REST API pro rychlé lokální dotazy
 
-## Quick Start
+## Rychlý start
 
 ```bash
 docker compose up --build -d
 ```
 
-Open:
+Otevři:
 
 - Frontend: http://localhost:5183
 - API: http://localhost:5110/api
 - OpenAPI: http://localhost:5110/openapi/v1.json
+- PostgreSQL na hostu: `localhost:5434`
 
-Stop:
+Zastavení:
 
 ```bash
 docker compose down
 ```
 
-Reset database volume:
+Smazání databázového volume:
 
 ```bash
 docker compose down -v
 ```
 
-## API Endpoints
+## Frontend styling
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/profile` | Get profile |
-| PUT | `/api/profile` | Upsert profile |
-| GET/POST | `/api/goals` | List or create goals |
-| PUT/DELETE | `/api/goals/:id` | Update or delete goal |
-| GET/POST | `/api/preferences` | List or create preference/constraint |
-| PUT/DELETE | `/api/preferences/:id` | Update or delete preference item |
-| GET/POST | `/api/check-ins` | List or create check-ins |
-| PUT/DELETE | `/api/check-ins/:id` | Update or delete check-in |
-| GET | `/api/dashboard/summary` | Dashboard summary |
-| GET | `/api/export` | Export all stored data |
-| GET | `/api/search?q=...` | Search stored fitness content |
+Frontend zůstává v Reactu, ale styling je nově postavený na lokálním CSS design systemu v `frontend/src/style.css`.
+Redesign přebírá hlavní vizuální principy z JarvisCars:
 
-## Agent Helper
+- tenký app shell s kompaktním navbar layoutem
+- ploché karty, standardizované buttony, badge a tabulky
+- systémové sans-serif písmo a modrý primární akcent
+- výraznější sekční hierarchii a čitelné empty/error stavy
+
+Výsledek nevyžaduje žádnou runtime CDN pro CSS framework.
+
+## API endpointy
+
+| Metoda | Cesta | Popis |
+|--------|------|-------|
+| GET | `/api/health` | Kontrola stavu služby |
+| GET | `/api/profile` | Načtení profilu |
+| PUT | `/api/profile` | Uložení profilu |
+| GET/POST | `/api/goals` | Seznam nebo vytvoření cílů |
+| PUT/DELETE | `/api/goals/:id` | Úprava nebo smazání cíle |
+| GET/POST | `/api/preferences` | Seznam nebo vytvoření preferencí a omezení |
+| PUT/DELETE | `/api/preferences/:id` | Úprava nebo smazání položky |
+| GET/POST | `/api/check-ins` | Seznam nebo vytvoření kontrol |
+| PUT/DELETE | `/api/check-ins/:id` | Úprava nebo smazání kontroly |
+| GET | `/api/dashboard/summary` | Souhrn přehledu |
+| GET | `/api/export` | Export všech uložených dat |
+| GET | `/api/search?q=...` | Vyhledávání napříč fitness záznamy |
+
+## Agent helper
 
 ```bash
 ./tools/jarvisfitness-cli.sh dashboard
 ./tools/jarvisfitness-cli.sh profile
 ./tools/jarvisfitness-cli.sh goals
-./tools/jarvisfitness-cli.sh create-goal '{"category":"Weight","title":"Lose 3 kg","targetValue":69,"unit":"kg","timeframe":"12 weeks","status":"Active"}'
-./tools/jarvisfitness-cli.sh create-check-in '{"checkInDate":"2026-03-30","weightKg":71.2,"energy":8,"adherence":9}'
-./tools/jarvisfitness-cli.sh search "shoulder"
+./tools/jarvisfitness-cli.sh create-goal '{"category":"Weight","title":"Zhubnout 3 kg","targetValue":69,"unit":"kg","timeframe":"12 týdnů","status":"Active"}'
+./tools/jarvisfitness-cli.sh create-check-in '{"checkInDate":"2026-03-30","weightKg":71.2,"energy":8,"adherence":9,"notes":"Stabilní týden"}'
+./tools/jarvisfitness-cli.sh search "rameno"
 ```
 
-Override `JARVISFITNESS_API_URL` to point the helper at a different API base.
+Proměnná `JARVISFITNESS_API_URL` může přesměrovat helper na jinou API základnu. Hodnoty enumů v API kontraktu zůstávají technicky anglické, ale UI a zobrazené lookup hodnoty jsou přeložené do češtiny.
 
-## Development
+## Lokální vývoj
 
-Backend build in Docker:
+Backend build:
 
 ```bash
-docker run --rm -v "$(pwd)/backend:/app" -w /app mcr.microsoft.com/dotnet/sdk:10.0 dotnet build
+cd backend
+dotnet build
 ```
 
-Frontend dev server:
+Frontend build:
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run build
 ```
 
-The Vite dev server proxies `/api` to `http://localhost:5110`.
+Vite dev server proxyuje `/api` na `http://localhost:5110`.
 
-## Verification
+## Ověření
 
-Commands used for this rewrite:
+Požadované ověření pro tuto iteraci:
 
 ```bash
-cd frontend && npm install && npm run build
-docker run --rm -v "$(pwd)/backend:/app" -w /app mcr.microsoft.com/dotnet/sdk:10.0 dotnet build
+cd frontend && npm run build
+cd backend && dotnet build
 docker compose up --build -d
 curl http://localhost:5110/api/health
 curl http://localhost:5110/api/dashboard/summary
-./tools/jarvisfitness-cli.sh export
 ```
 
-## Repository Layout
+Pokud prostředí blokuje přístup na `api.nuget.org`, backend build a Docker build backendu neprojdou, protože .NET restore vyžaduje NuGet balíčky.
+
+## Rozložení repozitáře
 
 ```text
-backend/                       .NET 10 API, models, DTOs, controllers, EF Core data layer
-frontend/                      React app
-tools/jarvisfitness-cli.sh     agent-facing helper
-docker-compose.yml
+backend/                       .NET 10 API, controllery, DTOs, EF Core
+frontend/                      React + Vite frontend s českým UI
+tools/jarvisfitness-cli.sh     helper pro práci s API
+docker-compose.yml             lokální stack pro db + backend + frontend
 README.md
 ```

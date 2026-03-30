@@ -6,9 +6,9 @@ interface MetricCardProps {
 
 export default function MetricCard({ label, value, accent = 'neutral' }: MetricCardProps) {
   return (
-    <article className={`metric-card metric-card--${accent}`}>
-      <p>{label}</p>
-      <strong>{value}</strong>
+    <article className={`metric-card metric-card-${accent}`}>
+      <p className="metric-label">{label}</p>
+      <strong className="metric-value">{value}</strong>
     </article>
   )
 }

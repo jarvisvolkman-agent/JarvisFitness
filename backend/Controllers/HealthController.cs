@@ -11,7 +11,7 @@ public class HealthController : ControllerBase
     {
         return new
         {
-            status = "ok",
+            status = "v poradku",
             service = "JarvisFitness.Api",
             utc = DateTime.UtcNow
         };

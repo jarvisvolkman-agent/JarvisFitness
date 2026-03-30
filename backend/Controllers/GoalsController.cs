@@ -46,7 +46,7 @@ public class GoalsController(AppDbContext db) : ControllerBase
     public async Task<ActionResult<object>> Update(int id, [FromBody] GoalUpdateDto dto)
     {
         var goal = await db.Goals.FindAsync(id);
-        if (goal is null) return NotFound(new { error = "Goal not found." });
+        if (goal is null) return NotFound(new { error = "Cíl nebyl nalezen." });
 
         if (dto.Category.HasValue) goal.Category = dto.Category.Value;
         if (dto.Title is not null) goal.Title = dto.Title;
@@ -65,7 +65,7 @@ public class GoalsController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var goal = await db.Goals.FindAsync(id);
-        if (goal is null) return NotFound(new { error = "Goal not found." });
+        if (goal is null) return NotFound(new { error = "Cíl nebyl nalezen." });
 
         db.Goals.Remove(goal);
         await db.SaveChangesAsync();
