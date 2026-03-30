@@ -24,8 +24,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export type ActivityLevel = 'Sedentary' | 'LightlyActive' | 'ModeratelyActive' | 'VeryActive'
 export type GoalCategory = 'Weight' | 'Performance' | 'Nutrition' | 'Habit'
 export type GoalStatus = 'Active' | 'Paused' | 'Completed'
-export type ItemKind = 'Preference' | 'Constraint'
-export type PreferenceCategory = 'Nutrition' | 'Training' | 'Schedule' | 'Medical' | 'Lifestyle'
+export type WorkoutStatus = 'Planned' | 'Completed' | 'Missed'
 
 export interface Profile {
   id: number
@@ -59,17 +58,6 @@ export interface Goal {
   updatedAt: string
 }
 
-export interface PreferenceItem {
-  id: number
-  kind: ItemKind
-  category: PreferenceCategory
-  label: string
-  value: string | null
-  notes: string | null
-  createdAt: string
-  updatedAt: string
-}
-
 export interface CheckIn {
   id: number
   checkInDate: string
@@ -83,12 +71,42 @@ export interface CheckIn {
   createdAt: string
 }
 
+export interface TrainingPlan {
+  id: number
+  title: string
+  focus: string | null
+  startDate: string
+  endDate: string | null
+  isActive: boolean
+  notes: string | null
+  plannedWorkoutCount: number
+  completedWorkoutCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WorkoutEntry {
+  id: number
+  trainingPlanId: number | null
+  trainingPlanTitle: string | null
+  title: string
+  workoutType: string | null
+  scheduledDate: string
+  completedDate: string | null
+  durationMinutes: number | null
+  status: WorkoutStatus
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface DashboardMetrics {
   activeGoalsCount: number
   completedGoalsCount: number
-  constraintsCount: number
-  preferencesCount: number
   checkInCount: number
+  activeTrainingPlansCount: number
+  plannedWorkoutsCount: number
+  completedWorkoutsCount: number
   latestWeightKg: number | null
   latestEnergy: number | null
   latestAdherence: number | null
@@ -99,7 +117,9 @@ export interface DashboardSummary {
   profile: Profile | null
   metrics: DashboardMetrics
   activeGoals: Goal[]
-  constraints: PreferenceItem[]
+  activeTrainingPlans: TrainingPlan[]
+  upcomingWorkouts: WorkoutEntry[]
+  recentCompletedWorkouts: WorkoutEntry[]
   recentCheckIns: CheckIn[]
 }
 
@@ -138,14 +158,6 @@ export interface GoalPayload {
   notes: string | null
 }
 
-export interface PreferencePayload {
-  kind: ItemKind
-  category: PreferenceCategory
-  label: string
-  value: string | null
-  notes: string | null
-}
-
 export interface CheckInPayload {
   checkInDate: string
   weightKg: number | null
@@ -154,6 +166,26 @@ export interface CheckInPayload {
   trainingSessions: number | null
   energy: number | null
   adherence: number | null
+  notes: string | null
+}
+
+export interface TrainingPlanPayload {
+  title: string
+  focus: string | null
+  startDate: string
+  endDate: string | null
+  isActive: boolean
+  notes: string | null
+}
+
+export interface WorkoutEntryPayload {
+  trainingPlanId: number | null
+  title: string
+  workoutType: string | null
+  scheduledDate: string
+  completedDate: string | null
+  durationMinutes: number | null
+  status: WorkoutStatus
   notes: string | null
 }
 
@@ -169,17 +201,23 @@ export const api = {
     update: (id: number, data: Partial<GoalPayload>) => request<{ goal: Goal }>(`/goals/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: number) => request<void>(`/goals/${id}`, { method: 'DELETE' }),
   },
-  preferences: {
-    list: (kind?: ItemKind) => request<{ items: PreferenceItem[] }>(`/preferences${kind ? `?kind=${kind}` : ''}`),
-    create: (data: PreferencePayload) => request<{ item: PreferenceItem }>('/preferences', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: number, data: Partial<PreferencePayload>) => request<{ item: PreferenceItem }>(`/preferences/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: number) => request<void>(`/preferences/${id}`, { method: 'DELETE' }),
-  },
   checkIns: {
     list: () => request<{ checkIns: CheckIn[] }>('/check-ins'),
     create: (data: CheckInPayload) => request<{ checkIn: CheckIn }>('/check-ins', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: number, data: Partial<CheckInPayload>) => request<{ checkIn: CheckIn }>(`/check-ins/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: number) => request<void>(`/check-ins/${id}`, { method: 'DELETE' }),
+  },
+  trainingPlans: {
+    list: () => request<{ plans: TrainingPlan[] }>('/training-plans'),
+    create: (data: TrainingPlanPayload) => request<{ plan: TrainingPlan }>('/training-plans', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: Partial<TrainingPlanPayload>) => request<{ plan: TrainingPlan }>(`/training-plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => request<void>(`/training-plans/${id}`, { method: 'DELETE' }),
+  },
+  workouts: {
+    list: (status?: WorkoutStatus) => request<{ workouts: WorkoutEntry[] }>(`/workouts${status ? `?status=${status}` : ''}`),
+    create: (data: WorkoutEntryPayload) => request<{ workout: WorkoutEntry }>('/workouts', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: Partial<WorkoutEntryPayload>) => request<{ workout: WorkoutEntry }>(`/workouts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => request<void>(`/workouts/${id}`, { method: 'DELETE' }),
   },
   dashboard: {
     summary: () => request<DashboardSummary>('/dashboard/summary'),

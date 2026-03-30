@@ -1,16 +1,4 @@
-import type {
-  ActivityLevel,
-  CheckIn,
-  DashboardSummary,
-  Goal,
-  GoalCategory,
-  GoalStatus,
-  ItemKind,
-  PreferenceCategory,
-  PreferenceItem,
-  Profile,
-  SearchResult,
-} from './api'
+import type { ActivityLevel, CheckIn, DashboardSummary, Goal, GoalCategory, GoalStatus, Profile, SearchResult, TrainingPlan, WorkoutEntry, WorkoutStatus } from './api'
 
 export const activityLevelLabels: Record<ActivityLevel, string> = {
   Sedentary: 'Sedavý režim',
@@ -32,31 +20,26 @@ export const goalStatusLabels: Record<GoalStatus, string> = {
   Completed: 'Splněný',
 }
 
-export const itemKindLabels: Record<ItemKind, string> = {
-  Preference: 'Preference',
-  Constraint: 'Omezení',
-}
-
-export const preferenceCategoryLabels: Record<PreferenceCategory, string> = {
-  Nutrition: 'Výživa',
-  Training: 'Trénink',
-  Schedule: 'Rozvrh',
-  Medical: 'Zdraví',
-  Lifestyle: 'Životní styl',
+export const workoutStatusLabels: Record<WorkoutStatus, string> = {
+  Planned: 'Plánovaný',
+  Completed: 'Odcvičený',
+  Missed: 'Nevyšel',
 }
 
 export const entityTypeLabels: Record<string, string> = {
   goal: 'Cíl',
-  preference: 'Preference',
-  constraint: 'Omezení',
+  'training-plan': 'Tréninkový plán',
+  'planned-workout': 'Plánovaný trénink',
+  'completed-workout': 'Odcvičený trénink',
   'check-in': 'Kontrola',
   profile: 'Profil',
 }
 
 export const matchFieldLabels: Record<string, string> = {
   cil: 'Cíl',
-  preference: 'Preference',
-  omezeni: 'Omezení',
+  plan: 'Plán',
+  'planovany-trenink': 'Plánovaný trénink',
+  'odcviceny-trenink': 'Odcvičený trénink',
   poznamky: 'Poznámky',
   profil: 'Profil',
 }
@@ -98,16 +81,35 @@ function translateGoal(goal: Goal) {
   }
 }
 
-function translatePreference(item: PreferenceItem) {
+function translateTrainingPlan(plan: TrainingPlan) {
   return {
-    Id: item.id,
-    Typ: itemKindLabels[item.kind],
-    Kategorie: preferenceCategoryLabels[item.category],
-    Název: item.label,
-    Hodnota: item.value,
-    Poznámky: item.notes,
-    Vytvořeno: item.createdAt,
-    Aktualizováno: item.updatedAt,
+    Id: plan.id,
+    Název: plan.title,
+    Zaměření: plan.focus,
+    'Začátek': plan.startDate,
+    Konec: plan.endDate,
+    Aktivní: plan.isActive ? 'ano' : 'ne',
+    'Plánované tréninky': plan.plannedWorkoutCount,
+    'Odcvičené tréninky': plan.completedWorkoutCount,
+    Poznámky: plan.notes,
+    Vytvořeno: plan.createdAt,
+    Aktualizováno: plan.updatedAt,
+  }
+}
+
+function translateWorkout(workout: WorkoutEntry) {
+  return {
+    Id: workout.id,
+    Název: workout.title,
+    'Typ tréninku': workout.workoutType,
+    'Tréninkový plán': workout.trainingPlanTitle,
+    'Plánované datum': workout.scheduledDate,
+    'Datum odcvičení': workout.completedDate,
+    'Délka (min)': workout.durationMinutes,
+    Stav: workoutStatusLabels[workout.status],
+    Poznámky: workout.notes,
+    Vytvořeno: workout.createdAt,
+    Aktualizováno: workout.updatedAt,
   }
 }
 
@@ -119,14 +121,14 @@ function translateCheckIn(checkIn: CheckIn) {
     'Průměr kalorií': checkIn.caloriesAvg,
     'Průměr bílkovin (g)': checkIn.proteinGAvg,
     'Počet tréninků': checkIn.trainingSessions,
-    'Energie': checkIn.energy,
+    Energie: checkIn.energy,
     Dodržení: checkIn.adherence,
     Poznámky: checkIn.notes,
     Vytvořeno: checkIn.createdAt,
   }
 }
 
-export function createLocalizedExport(summary: DashboardSummary | null, goals: Goal[], preferences: PreferenceItem[], checkIns: CheckIn[]) {
+export function createLocalizedExport(summary: DashboardSummary | null, goals: Goal[], trainingPlans: TrainingPlan[], workouts: WorkoutEntry[], checkIns: CheckIn[]) {
   return JSON.stringify(
     {
       Profil: translateProfile(summary?.profile ?? null),
@@ -134,9 +136,10 @@ export function createLocalizedExport(summary: DashboardSummary | null, goals: G
         ? {
             'Aktivní cíle': summary.metrics.activeGoalsCount,
             'Splněné cíle': summary.metrics.completedGoalsCount,
-            Omezení: summary.metrics.constraintsCount,
-            Preference: summary.metrics.preferencesCount,
-            Kontroly: summary.metrics.checkInCount,
+            'Kontroly': summary.metrics.checkInCount,
+            'Aktivní tréninkové plány': summary.metrics.activeTrainingPlansCount,
+            'Plánované tréninky': summary.metrics.plannedWorkoutsCount,
+            'Odcvičené tréninky': summary.metrics.completedWorkoutsCount,
             'Poslední hmotnost (kg)': summary.metrics.latestWeightKg,
             'Poslední energie': summary.metrics.latestEnergy,
             'Poslední dodržení': summary.metrics.latestAdherence,
@@ -144,7 +147,8 @@ export function createLocalizedExport(summary: DashboardSummary | null, goals: G
           }
         : null,
       Cile: goals.map(translateGoal),
-      PreferenceAOmezeni: preferences.map(translatePreference),
+      TreningovePlany: trainingPlans.map(translateTrainingPlan),
+      Treningy: workouts.map(translateWorkout),
       Kontroly: checkIns.map(translateCheckIn),
     },
     null,

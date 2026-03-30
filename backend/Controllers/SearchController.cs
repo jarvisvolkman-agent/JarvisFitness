@@ -1,6 +1,5 @@
 using JarvisFitness.Api.Data;
 using JarvisFitness.Api.Dtos;
-using JarvisFitness.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,16 +27,25 @@ public class SearchController(AppDbContext db) : ControllerBase
             .ToListAsync();
         results.AddRange(goals.Select(g => new SearchResultDto("goal", g.Id, g.Title, "cil", g.Notes ?? g.Title)));
 
-        var items = await db.PreferenceItems.AsNoTracking()
-            .Where(i => EF.Functions.ILike(i.Label, pattern) || (i.Value != null && EF.Functions.ILike(i.Value, pattern)) || (i.Notes != null && EF.Functions.ILike(i.Notes, pattern)))
+        var plans = await db.TrainingPlans.AsNoTracking()
+            .Where(plan => EF.Functions.ILike(plan.Title, pattern) || (plan.Focus != null && EF.Functions.ILike(plan.Focus, pattern)) || (plan.Notes != null && EF.Functions.ILike(plan.Notes, pattern)))
             .Take(10)
             .ToListAsync();
-        results.AddRange(items.Select(i => new SearchResultDto(
-            i.Kind == ItemKind.Constraint ? "constraint" : "preference",
-            i.Id,
-            i.Label,
-            i.Kind == ItemKind.Constraint ? "omezeni" : "preference",
-            i.Value ?? i.Notes ?? i.Label)));
+        results.AddRange(plans.Select(plan => new SearchResultDto("training-plan", plan.Id, plan.Title, "plan", plan.Focus ?? plan.Notes ?? plan.Title)));
+
+        var workouts = await db.WorkoutEntries.AsNoTracking()
+            .Include(workout => workout.TrainingPlan)
+            .Where(workout => EF.Functions.ILike(workout.Title, pattern)
+                || (workout.WorkoutType != null && EF.Functions.ILike(workout.WorkoutType, pattern))
+                || (workout.Notes != null && EF.Functions.ILike(workout.Notes, pattern)))
+            .Take(10)
+            .ToListAsync();
+        results.AddRange(workouts.Select(workout => new SearchResultDto(
+            workout.Status == Models.WorkoutStatus.Completed ? "completed-workout" : "planned-workout",
+            workout.Id,
+            workout.Title,
+            workout.Status == Models.WorkoutStatus.Completed ? "odcviceny-trenink" : "planovany-trenink",
+            workout.Notes ?? workout.WorkoutType ?? workout.TrainingPlan?.Title ?? workout.Title)));
 
         var checkIns = await db.CheckIns.AsNoTracking()
             .Where(c => c.Notes != null && EF.Functions.ILike(c.Notes, pattern))

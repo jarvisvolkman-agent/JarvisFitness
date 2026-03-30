@@ -36,9 +36,7 @@ export default function SearchPage() {
         <div>
           <div className="eyebrow">Hledání</div>
           <h1>Průřezové vyhledávání napříč fitness daty</h1>
-          <p>
-            Najdi cíle, preference, omezení, profilové poznámky i záznamy z kontrol z jednoho místa.
-          </p>
+          <p>Najdi cíle, tréninkové plány, jednotlivé tréninky, profilové poznámky i záznamy z kontrol z jednoho místa.</p>
         </div>
         <div className="actions-right">
           <Link className="btn btn-secondary" to="/">
@@ -51,12 +49,7 @@ export default function SearchPage() {
         <form className="toolbar-form" onSubmit={onSubmit}>
           <div className="form-group search-field">
             <label htmlFor="search-page-query">Dotaz</label>
-            <input
-              id="search-page-query"
-              value={query}
-              onChange={event => setQuery(event.target.value)}
-              placeholder="Zadej alespoň dva znaky"
-            />
+            <input id="search-page-query" value={query} onChange={event => setQuery(event.target.value)} placeholder="Zadej alespoň dva znaky" />
           </div>
           <div className="toolbar-actions">
             <button type="submit" className="btn btn-primary">
@@ -68,9 +61,7 @@ export default function SearchPage() {
         {loading ? <div className="loading">Probíhá vyhledávání...</div> : null}
         {error ? <div className="error">{error}</div> : null}
 
-        {!loading && !error && results.length === 0 ? (
-          <div className="empty">Zadej alespoň dva znaky a prohledej celý fitness workspace.</div>
-        ) : null}
+        {!loading && !error && results.length === 0 ? <div className="empty">Zadej alespoň dva znaky a prohledej celý fitness workspace.</div> : null}
 
         {results.length > 0 ? (
           <div className="search-results-card">

@@ -15,28 +15,31 @@ public class DashboardController(AppDbContext db) : ControllerBase
     {
         var profile = await db.Profiles.AsNoTracking().FirstOrDefaultAsync();
         var goals = await db.Goals.AsNoTracking().OrderByDescending(g => g.UpdatedAt).ToListAsync();
-        var items = await db.PreferenceItems.AsNoTracking().ToListAsync();
+        var plans = await db.TrainingPlans.AsNoTracking().Include(plan => plan.Workouts).OrderByDescending(plan => plan.UpdatedAt).ToListAsync();
+        var workouts = await db.WorkoutEntries.AsNoTracking().Include(workout => workout.TrainingPlan).OrderBy(workout => workout.ScheduledDate).ToListAsync();
         var checkIns = await db.CheckIns.AsNoTracking().OrderByDescending(c => c.CheckInDate).ToListAsync();
 
         var latest = checkIns.FirstOrDefault();
         var oldest = checkIns.LastOrDefault();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var summary = new DashboardSummaryDto(
             profile is null ? null : MapProfile(profile),
             new DashboardMetricsDto(
                 goals.Count(g => g.Status == GoalStatus.Active),
                 goals.Count(g => g.Status == GoalStatus.Completed),
-                items.Count(i => i.Kind == ItemKind.Constraint),
-                items.Count(i => i.Kind == ItemKind.Preference),
                 checkIns.Count,
+                plans.Count(plan => plan.IsActive),
+                workouts.Count(workout => workout.Status == WorkoutStatus.Planned && workout.ScheduledDate >= today),
+                workouts.Count(workout => workout.Status == WorkoutStatus.Completed),
                 latest?.WeightKg,
                 latest?.Energy,
                 latest?.Adherence,
-                latest?.WeightKg is not null && oldest?.WeightKg is not null
-                    ? latest.WeightKg - oldest.WeightKg
-                    : null),
+                latest?.WeightKg is not null && oldest?.WeightKg is not null ? latest.WeightKg - oldest.WeightKg : null),
             goals.Where(g => g.Status == GoalStatus.Active).Take(5).Select(MapGoal).ToList(),
-            items.Where(i => i.Kind == ItemKind.Constraint).OrderBy(i => i.Category).Select(MapPreference).ToList(),
+            plans.Where(plan => plan.IsActive).Take(4).Select(MapPlan).ToList(),
+            workouts.Where(workout => workout.Status == WorkoutStatus.Planned && workout.ScheduledDate >= today).Take(5).Select(MapWorkout).ToList(),
+            workouts.Where(workout => workout.Status == WorkoutStatus.Completed).OrderByDescending(workout => workout.CompletedDate ?? workout.ScheduledDate).Take(5).Select(MapWorkout).ToList(),
             checkIns.Take(6).Select(MapCheckIn).ToList());
 
         return summary;
@@ -52,8 +55,16 @@ public class DashboardController(AppDbContext db) : ControllerBase
     private static GoalDto MapGoal(Goal goal) =>
         new(goal.Id, goal.Category, goal.Title, goal.TargetValue, goal.Unit, goal.Timeframe, goal.Status, goal.Notes, goal.CreatedAt, goal.UpdatedAt);
 
-    private static PreferenceItemDto MapPreference(PreferenceItem item) =>
-        new(item.Id, item.Kind, item.Category, item.Label, item.Value, item.Notes, item.CreatedAt, item.UpdatedAt);
+    private static TrainingPlanDto MapPlan(TrainingPlan plan) =>
+        new(plan.Id, plan.Title, plan.Focus, plan.StartDate, plan.EndDate, plan.IsActive, plan.Notes,
+            plan.Workouts.Count(workout => workout.Status == WorkoutStatus.Planned),
+            plan.Workouts.Count(workout => workout.Status == WorkoutStatus.Completed),
+            plan.CreatedAt, plan.UpdatedAt);
+
+    private static WorkoutEntryDto MapWorkout(WorkoutEntry workout) =>
+        new(workout.Id, workout.TrainingPlanId, workout.TrainingPlan?.Title, workout.Title, workout.WorkoutType,
+            workout.ScheduledDate, workout.CompletedDate, workout.DurationMinutes, workout.Status, workout.Notes,
+            workout.CreatedAt, workout.UpdatedAt);
 
     private static CheckInDto MapCheckIn(CheckIn checkIn) =>
         new(checkIn.Id, checkIn.CheckInDate, checkIn.WeightKg, checkIn.CaloriesAvg, checkIn.ProteinGAvg, checkIn.TrainingSessions, checkIn.Energy, checkIn.Adherence, checkIn.Notes, checkIn.CreatedAt);

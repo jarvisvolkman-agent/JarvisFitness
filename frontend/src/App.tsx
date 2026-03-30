@@ -3,16 +3,18 @@ import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import CheckInsPage from './pages/CheckInsPage'
 import DashboardPage from './pages/DashboardPage'
 import GoalsPage from './pages/GoalsPage'
-import PreferencesPage from './pages/PreferencesPage'
 import ProfilePage from './pages/ProfilePage'
 import SearchPage from './pages/SearchPage'
+import TrainingPlansPage from './pages/TrainingPlansPage'
+import WorkoutsPage from './pages/WorkoutsPage'
 
 const mainNav = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/profil', label: 'Profil' },
   { to: '/cile', label: 'Cíle' },
+  { to: '/treninkove-plany', label: 'Plány' },
+  { to: '/treningy', label: 'Tréninky' },
   { to: '/kontroly', label: 'Kontroly' },
-  { to: '/mantinely', label: 'Mantinely' },
 ]
 
 function navClassName({ isActive }: { isActive: boolean }) {
@@ -37,7 +39,7 @@ export default function App() {
           <NavLink to="/" className="brand-mark">
             JarvisFitness
           </NavLink>
-          <span className="brand-meta">Dashboard pro profil, cíle, kontroly a mantinely</span>
+          <span className="brand-meta">Dashboard pro profil, cíle, tréninkové plány, tréninky a kontroly</span>
         </div>
 
         <div className="nav-links">
@@ -55,12 +57,7 @@ export default function App() {
 
           <div className="search-box">
             <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                placeholder="Hledat cíle, poznámky..."
-                value={query}
-                onChange={event => setQuery(event.target.value)}
-              />
+              <input type="text" placeholder="Hledat cíle, plány, tréninky..." value={query} onChange={event => setQuery(event.target.value)} />
             </form>
           </div>
         </div>
@@ -71,8 +68,9 @@ export default function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/profil" element={<ProfilePage />} />
           <Route path="/cile" element={<GoalsPage />} />
+          <Route path="/treninkove-plany" element={<TrainingPlansPage />} />
+          <Route path="/treningy" element={<WorkoutsPage />} />
           <Route path="/kontroly" element={<CheckInsPage />} />
-          <Route path="/mantinely" element={<PreferencesPage />} />
           <Route path="/search" element={<SearchPage />} />
         </Routes>
       </main>

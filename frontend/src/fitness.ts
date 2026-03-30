@@ -7,26 +7,20 @@ import type {
   GoalCategory,
   GoalPayload,
   GoalStatus,
-  ItemKind,
-  PreferenceCategory,
-  PreferenceItem,
-  PreferencePayload,
   Profile,
   ProfilePayload,
+  TrainingPlan,
+  TrainingPlanPayload,
+  WorkoutEntry,
+  WorkoutEntryPayload,
+  WorkoutStatus,
 } from './api'
-import {
-  activityLevelLabels,
-  formatMetricValue,
-  goalStatusLabels,
-  itemKindLabels,
-  preferenceCategoryLabels,
-} from './i18n'
+import { activityLevelLabels, formatMetricValue, goalStatusLabels, workoutStatusLabels } from './i18n'
 
 export const activityLevels: ActivityLevel[] = ['Sedentary', 'LightlyActive', 'ModeratelyActive', 'VeryActive']
 export const goalCategories: GoalCategory[] = ['Weight', 'Performance', 'Nutrition', 'Habit']
 export const goalStatuses: GoalStatus[] = ['Active', 'Paused', 'Completed']
-export const itemKinds: ItemKind[] = ['Preference', 'Constraint']
-export const preferenceCategories: PreferenceCategory[] = ['Nutrition', 'Training', 'Schedule', 'Medical', 'Lifestyle']
+export const workoutStatuses: WorkoutStatus[] = ['Planned', 'Completed', 'Missed']
 
 export const emptyProfile: ProfilePayload = {
   fullName: '',
@@ -55,11 +49,23 @@ export const emptyGoal: GoalPayload = {
   notes: null,
 }
 
-export const emptyPreference: PreferencePayload = {
-  kind: 'Preference',
-  category: 'Training',
-  label: '',
-  value: null,
+export const emptyTrainingPlan: TrainingPlanPayload = {
+  title: '',
+  focus: null,
+  startDate: todayIso(),
+  endDate: null,
+  isActive: true,
+  notes: null,
+}
+
+export const emptyWorkout: WorkoutEntryPayload = {
+  trainingPlanId: null,
+  title: '',
+  workoutType: null,
+  scheduledDate: todayIso(),
+  completedDate: null,
+  durationMinutes: null,
+  status: 'Planned',
   notes: null,
 }
 
@@ -122,13 +128,27 @@ export function goalToPayload(goal: Goal): GoalPayload {
   }
 }
 
-export function preferenceToPayload(item: PreferenceItem): PreferencePayload {
+export function trainingPlanToPayload(plan: TrainingPlan): TrainingPlanPayload {
   return {
-    kind: item.kind,
-    category: item.category,
-    label: item.label,
-    value: item.value,
-    notes: item.notes,
+    title: plan.title,
+    focus: plan.focus,
+    startDate: plan.startDate,
+    endDate: plan.endDate,
+    isActive: plan.isActive,
+    notes: plan.notes,
+  }
+}
+
+export function workoutToPayload(workout: WorkoutEntry): WorkoutEntryPayload {
+  return {
+    trainingPlanId: workout.trainingPlanId,
+    title: workout.title,
+    workoutType: workout.workoutType,
+    scheduledDate: workout.scheduledDate,
+    completedDate: workout.completedDate,
+    durationMinutes: workout.durationMinutes,
+    status: workout.status,
+    notes: workout.notes,
   }
 }
 
@@ -158,8 +178,8 @@ export function profileSnapshot(summary: DashboardSummary | null) {
     return [
       { label: 'Profil', value: 'Zatím nevyplněný' },
       { label: 'Poslední kontrola', value: summary?.recentCheckIns[0] ? formatDate(summary.recentCheckIns[0].checkInDate) : 'Žádná' },
-      { label: 'Aktivní omezení', value: String(summary?.metrics.constraintsCount ?? 0) },
-      { label: 'Výživové preference', value: String(summary?.metrics.preferencesCount ?? 0) },
+      { label: 'Aktivní plány', value: String(summary?.metrics.activeTrainingPlansCount ?? 0) },
+      { label: 'Plánované tréninky', value: String(summary?.metrics.plannedWorkoutsCount ?? 0) },
     ]
   }
 
@@ -177,8 +197,10 @@ export function goalBadgeClass(status: GoalStatus) {
   return 'badge badge-info'
 }
 
-export function itemBadgeClass(kind: ItemKind) {
-  return kind === 'Constraint' ? 'badge badge-warning' : 'badge badge-active'
+export function workoutBadgeClass(status: WorkoutStatus) {
+  if (status === 'Completed') return 'badge badge-active'
+  if (status === 'Missed') return 'badge badge-warning'
+  return 'badge badge-info'
 }
 
 export function describeCheckIn(checkIn: CheckIn) {
@@ -191,8 +213,13 @@ export function describeCheckIn(checkIn: CheckIn) {
   return bits.length > 0 ? bits.join(' • ') : 'Bez hlavních metrik'
 }
 
-export function describePreference(item: PreferenceItem) {
-  const category = preferenceCategoryLabels[item.category]
-  const kind = itemKindLabels[item.kind]
-  return `${kind} • ${category}`
+export function describeWorkout(workout: WorkoutEntry) {
+  const bits = [
+    workout.workoutType,
+    workout.durationMinutes != null ? `${workout.durationMinutes} min` : null,
+    workout.trainingPlanTitle,
+    workoutStatusLabels[workout.status],
+  ].filter(Boolean)
+
+  return bits.join(' • ')
 }

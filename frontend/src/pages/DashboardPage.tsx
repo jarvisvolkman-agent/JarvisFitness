@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, DashboardSummary } from '../api'
 import MetricCard from '../components/MetricCard'
-import { describeCheckIn, formatDate, goalBadgeClass, itemBadgeClass, profileSnapshot } from '../fitness'
+import { describeCheckIn, describeWorkout, formatDate, goalBadgeClass, profileSnapshot, workoutBadgeClass } from '../fitness'
 import { formatCheckInWeight, formatGoalTarget, goalStatusLabels } from '../i18n'
 
 const quickActions = [
@@ -19,16 +19,16 @@ const quickActions = [
     cta: 'Spravovat cíle',
   },
   {
-    title: 'Kontroly',
-    description: 'Průběžné check-iny s hmotností, energií, dodržením a poznámkami.',
-    href: '/kontroly',
-    cta: 'Otevřít kontroly',
+    title: 'Tréninkové plány',
+    description: 'Přehled bloků, mezocyklů a plánovaných jednotek navázaných na konkrétní plán.',
+    href: '/treninkove-plany',
+    cta: 'Otevřít plány',
   },
   {
-    title: 'Mantinely',
-    description: 'Preference a omezení, která ovlivňují trénink, stravu i rozvrh.',
-    href: '/mantinely',
-    cta: 'Upravit mantinely',
+    title: 'Tréninky',
+    description: 'Eviduj plánované i odcvičené tréninky, doplňuj poznámky a upravuj stav.',
+    href: '/treningy',
+    cta: 'Spravovat tréninky',
   },
 ]
 
@@ -52,17 +52,17 @@ export default function DashboardPage() {
       <section className="hero-panel">
         <div>
           <div className="eyebrow">Dashboard</div>
-          <h1>Jedno místo pro progres, aktuální priority a další krok.</h1>
+          <h1>Jedno místo pro progres, plán tréninku i evidenci odcvičené práce.</h1>
           <p>
-            Hlavní stránka teď funguje jako pracovní přehled. Detailní správa profilu, cílů, kontrol i praktických
-            mantinelů je rozdělená do samostatných obrazovek.
+            Hlavní stránka teď funguje jako pracovní přehled. Detailní správa profilu, cílů, tréninkových plánů,
+            jednotlivých tréninků i kontrol je rozdělená do samostatných obrazovek.
           </p>
           <div className="hero-actions">
-            <Link className="btn btn-primary" to="/kontroly">
-              Nová kontrola
+            <Link className="btn btn-primary" to="/treningy">
+              Nový trénink
             </Link>
-            <Link className="btn btn-secondary" to="/cile">
-              Upravit cíle
+            <Link className="btn btn-secondary" to="/treninkove-plany">
+              Upravit plán
             </Link>
           </div>
         </div>
@@ -78,9 +78,9 @@ export default function DashboardPage() {
 
       <section className="metric-grid">
         <MetricCard label="Aktivní cíle" value={String(summary?.metrics.activeGoalsCount ?? 0)} accent="cool" />
-        <MetricCard label="Splněné cíle" value={String(summary?.metrics.completedGoalsCount ?? 0)} accent="neutral" />
-        <MetricCard label="Kontroly" value={String(summary?.metrics.checkInCount ?? 0)} accent="cool" />
-        <MetricCard label="Omezení" value={String(summary?.metrics.constraintsCount ?? 0)} accent="warm" />
+        <MetricCard label="Aktivní plány" value={String(summary?.metrics.activeTrainingPlansCount ?? 0)} accent="neutral" />
+        <MetricCard label="Plánované tréninky" value={String(summary?.metrics.plannedWorkoutsCount ?? 0)} accent="cool" />
+        <MetricCard label="Odcvičené tréninky" value={String(summary?.metrics.completedWorkoutsCount ?? 0)} accent="warm" />
         <MetricCard label="Poslední hmotnost" value={formatCheckInWeight(summary?.metrics.latestWeightKg ?? null)} accent="neutral" />
       </section>
 
@@ -138,28 +138,32 @@ export default function DashboardPage() {
             <article className="card section-card">
               <div className="section-heading">
                 <div>
-                  <div className="eyebrow">Poslední kontroly</div>
-                  <h2>Jak se věci vyvíjejí</h2>
+                  <div className="eyebrow">Tréninkový plán</div>
+                  <h2>Nejbližší naplánované jednotky</h2>
                 </div>
-                <Link className="btn btn-secondary btn-sm" to="/kontroly">
-                  Historie kontrol
+                <Link className="btn btn-secondary btn-sm" to="/treningy">
+                  Všechny tréninky
                 </Link>
               </div>
 
-              {summary?.recentCheckIns.length ? (
+              {summary?.upcomingWorkouts.length ? (
                 <div className="stack-list">
-                  {summary.recentCheckIns.map(checkIn => (
-                    <article key={checkIn.id} className="stack-item">
+                  {summary.upcomingWorkouts.map(workout => (
+                    <article key={workout.id} className="stack-item">
                       <div className="stack-item-topline">
-                        <strong>{formatDate(checkIn.checkInDate)}</strong>
-                        <span className="badge badge-info">{describeCheckIn(checkIn)}</span>
+                        <strong>{workout.title}</strong>
+                        <span className={workoutBadgeClass(workout.status)}>{formatDate(workout.scheduledDate)}</span>
                       </div>
-                      <p>{checkIn.notes ?? 'Bez poznámek.'}</p>
+                      <p>{workout.notes ?? 'Bez poznámek.'}</p>
+                      <div className="stack-item-meta">
+                        <span>{describeWorkout(workout)}</span>
+                        <span>{workout.trainingPlanTitle ?? 'Bez plánu'}</span>
+                      </div>
                     </article>
                   ))}
                 </div>
               ) : (
-                <div className="empty compact">Zatím nejsou žádné kontroly.</div>
+                <div className="empty compact">Zatím nejsou žádné naplánované tréninky.</div>
               )}
             </article>
           </section>
@@ -168,48 +172,73 @@ export default function DashboardPage() {
             <article className="card section-card">
               <div className="section-heading">
                 <div>
-                  <div className="eyebrow">Mantinely</div>
-                  <h2>Aktuální omezení</h2>
+                  <div className="eyebrow">Tréninkové plány</div>
+                  <h2>Aktivní bloky a mezocykly</h2>
                 </div>
-                <Link className="btn btn-secondary btn-sm" to="/mantinely">
-                  Správa mantinelů
+                <Link className="btn btn-secondary btn-sm" to="/treninkove-plany">
+                  Správa plánů
                 </Link>
               </div>
 
-              {summary?.constraints.length ? (
+              {summary?.activeTrainingPlans.length ? (
                 <div className="stack-list">
-                  {summary.constraints.map(item => (
-                    <article key={item.id} className="stack-item">
+                  {summary.activeTrainingPlans.map(plan => (
+                    <article key={plan.id} className="stack-item">
                       <div className="stack-item-topline">
-                        <strong>{item.label}</strong>
-                        <span className={itemBadgeClass(item.kind)}>{item.kind === 'Constraint' ? 'Omezení' : 'Preference'}</span>
+                        <strong>{plan.title}</strong>
+                        <span className="badge badge-info">{plan.plannedWorkoutCount} plánovaných</span>
                       </div>
-                      <p>{item.value ?? item.notes ?? 'Bez doplňujícího popisu.'}</p>
+                      <p>{plan.focus ?? plan.notes ?? 'Bez doplňujícího popisu.'}</p>
+                      <div className="stack-item-meta">
+                        <span>Začátek {formatDate(plan.startDate)}</span>
+                        <span>{plan.completedWorkoutCount} odcvičených</span>
+                      </div>
                     </article>
                   ))}
                 </div>
               ) : (
-                <div className="empty compact">Zatím nejsou evidovaná omezení.</div>
+                <div className="empty compact">Zatím nejsou založené žádné aktivní plány.</div>
               )}
             </article>
 
             <article className="card section-card">
               <div className="section-heading">
                 <div>
-                  <div className="eyebrow">Profil</div>
-                  <h2>Rychlý kontext</h2>
+                  <div className="eyebrow">Evidence</div>
+                  <h2>Poslední odcvičené tréninky a kontroly</h2>
                 </div>
-                <Link className="btn btn-secondary btn-sm" to="/profil">
-                  Otevřít profil
+                <Link className="btn btn-secondary btn-sm" to="/kontroly">
+                  Historie kontrol
                 </Link>
               </div>
 
-              <div className="detail-grid">
-                {profileSnapshot(summary).map(item => (
-                  <div key={item.label} className="detail-card">
-                    <span>{item.label}</span>
-                    <strong>{item.value}</strong>
-                  </div>
+              <div className="stack-list">
+                {summary?.recentCompletedWorkouts.length ? (
+                  summary.recentCompletedWorkouts.map(workout => (
+                    <article key={`workout-${workout.id}`} className="stack-item">
+                      <div className="stack-item-topline">
+                        <strong>{workout.title}</strong>
+                        <span className="badge badge-active">{formatDate(workout.completedDate ?? workout.scheduledDate)}</span>
+                      </div>
+                      <p>{workout.notes ?? 'Bez poznámek.'}</p>
+                      <div className="stack-item-meta">
+                        <span>{describeWorkout(workout)}</span>
+                        <span>{workout.trainingPlanTitle ?? 'Bez plánu'}</span>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <div className="empty compact">Zatím nejsou žádné odcvičené tréninky.</div>
+                )}
+
+                {summary?.recentCheckIns.map(checkIn => (
+                  <article key={`checkin-${checkIn.id}`} className="stack-item">
+                    <div className="stack-item-topline">
+                      <strong>{formatDate(checkIn.checkInDate)}</strong>
+                      <span className="badge badge-info">{describeCheckIn(checkIn)}</span>
+                    </div>
+                    <p>{checkIn.notes ?? 'Bez poznámek.'}</p>
+                  </article>
                 ))}
               </div>
             </article>

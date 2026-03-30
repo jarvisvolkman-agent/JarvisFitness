@@ -5,9 +5,10 @@ namespace JarvisFitness.Api.Dtos;
 public record DashboardMetricsDto(
     int ActiveGoalsCount,
     int CompletedGoalsCount,
-    int ConstraintsCount,
-    int PreferencesCount,
     int CheckInCount,
+    int ActiveTrainingPlansCount,
+    int PlannedWorkoutsCount,
+    int CompletedWorkoutsCount,
     decimal? LatestWeightKg,
     int? LatestEnergy,
     int? LatestAdherence,
@@ -17,13 +18,16 @@ public record DashboardSummaryDto(
     ProfileDto? Profile,
     DashboardMetricsDto Metrics,
     List<GoalDto> ActiveGoals,
-    List<PreferenceItemDto> Constraints,
+    List<TrainingPlanDto> ActiveTrainingPlans,
+    List<WorkoutEntryDto> UpcomingWorkouts,
+    List<WorkoutEntryDto> RecentCompletedWorkouts,
     List<CheckInDto> RecentCheckIns);
 
 public record ExportDto(
     ProfileDto? Profile,
     List<GoalDto> Goals,
-    List<PreferenceItemDto> Preferences,
+    List<TrainingPlanDto> TrainingPlans,
+    List<WorkoutEntryDto> Workouts,
     List<CheckInDto> CheckIns);
 
 public record SearchResultDto(
