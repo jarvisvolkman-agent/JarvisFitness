@@ -1,7 +1,19 @@
 import { FormEvent, useState } from 'react'
 import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import CheckInsPage from './pages/CheckInsPage'
 import DashboardPage from './pages/DashboardPage'
+import GoalsPage from './pages/GoalsPage'
+import PreferencesPage from './pages/PreferencesPage'
+import ProfilePage from './pages/ProfilePage'
 import SearchPage from './pages/SearchPage'
+
+const mainNav = [
+  { to: '/', label: 'Dashboard', end: true },
+  { to: '/profil', label: 'Profil' },
+  { to: '/cile', label: 'Cíle' },
+  { to: '/kontroly', label: 'Kontroly' },
+  { to: '/mantinely', label: 'Mantinely' },
+]
 
 function navClassName({ isActive }: { isActive: boolean }) {
   return isActive ? 'nav-link active' : 'nav-link'
@@ -25,33 +37,42 @@ export default function App() {
           <NavLink to="/" className="brand-mark">
             JarvisFitness
           </NavLink>
-          <span className="brand-meta">Lokální fitness workspace</span>
+          <span className="brand-meta">Dashboard pro profil, cíle, kontroly a mantinely</span>
         </div>
 
         <div className="nav-links">
-          <NavLink to="/" end className={navClassName}>
-            Přehled
-          </NavLink>
+          {mainNav.map(item => (
+            <NavLink key={item.to} to={item.to} end={item.end} className={navClassName}>
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+
+        <div className="toolbar-cluster">
           <NavLink to="/search" className={navClassName}>
             Hledání
           </NavLink>
-        </div>
 
-        <div className="search-box">
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Hledat cíle, poznámky..."
-              value={query}
-              onChange={event => setQuery(event.target.value)}
-            />
-          </form>
+          <div className="search-box">
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                placeholder="Hledat cíle, poznámky..."
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+              />
+            </form>
+          </div>
         </div>
       </nav>
 
       <main className="app fitness-app">
         <Routes>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/profil" element={<ProfilePage />} />
+          <Route path="/cile" element={<GoalsPage />} />
+          <Route path="/kontroly" element={<CheckInsPage />} />
+          <Route path="/mantinely" element={<PreferencesPage />} />
           <Route path="/search" element={<SearchPage />} />
         </Routes>
       </main>
